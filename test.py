@@ -1,5 +1,4 @@
 import cv2
-import time
 from cvzone.ClassificationModule import Classifier
 from cvzone.HandTrackingModule import HandDetector
 import mediapipe
@@ -8,15 +7,17 @@ import math
 import tensorflow
 from collections import Counter
 import logging
+import keras
 
-offset=25
+offset=15
 imgSize= 300
 cap= cv2.VideoCapture(0)
 counter = 0
 detector = HandDetector(maxHands=1)
 # folder= "ThankYou"
+values= []
 Cfier = Classifier("model/keras_model.h5","model/labels.txt")
-label=["Hello","No","ThankYou","Yes"]
+label=["A","B","C"]
 
 def vote(values):
     # Count occurrences of each value
@@ -26,7 +27,6 @@ def vote(values):
     most_common_value = counts.most_common(1)[0]
     
     return most_common_value
-values= []
 
 
 
@@ -52,12 +52,12 @@ while True:
             imgResizeShape = imgResize.shape
             hGap = math.ceil((imgSize - hCal) / 2)
             imgWhite[hGap:hCal + hGap, :] = imgResize
-            pridictions,index =Cfier.getPrediction(img)
-            values.append(label[index])
-            if len(values) == 37:
-                result=vote(values)
-                print(f'the most common value is {result}')
-                values.clear()
+            # pridictions,index =Cfier.getPrediction(img)
+            # values.append(label[index])
+            # if len(values) == 37:
+            #     result=vote(values)
+            #     print(f'the most common value is {result}')
+            #     values.clear()
             # print(f'pridicted letter is {label[index]} with a pridiction rate of {pridictions}')
         else:
             k= imgSize / h
@@ -66,12 +66,12 @@ while True:
             imgResizeShape= imgResize.shape
             wGap= math.ceil((imgSize - wCalc)/2)
             imgWhite[:,wGap:wCalc+wGap]= imgResize
-            pridictions,index =Cfier.getPrediction(img)
-            values.append(label[index])
-            if len(values) == 37:
-                result=vote(values)
-                print(f'the most common value is {result}')
-                values.clear()
+        pridictions,index =Cfier.getPrediction(img)
+        values.append(label[index])
+        if len(values) == 37:
+            result=vote(values)
+            print(f'the most common value is {result}')
+            values.clear()
             # print(f'pridicted letter is {label[index]} which is at {index} with a pridiction rate of {pridictions}')
 
 
@@ -86,5 +86,3 @@ while True:
         break
 
 cap.release()
-
-logging.disable(logging.CRITICAL)
