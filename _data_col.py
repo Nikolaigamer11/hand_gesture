@@ -5,17 +5,17 @@ import mediapipe
 import numpy as np 
 import math
 
-offset=25
+offset=15
 imgSize= 300
 cap= cv2.VideoCapture(0)
 detector = HandDetector(maxHands=1)
 counter = 0
-folder= "Yes"
+folder= "A"
 
 
 while True:
     success, img =cap.read()
-    hands,img= detector.findHands(img)
+    hands,img= detector.findHands(img,draw=False)
     if hands:
         hand = hands[0]
         x,y,w,h=hand['bbox']
@@ -56,6 +56,6 @@ while True:
             cv2.imwrite(f'assets/{folder}/Img_{time.time()}.jpg',imgWhite)
             print(f'catured = {counter}')
     if cv2.waitKey(40) & 0xFF == ord('w'): 
+        cv2.destroyAllWindows()
         break
-    # cv2.destroyAllWindows()
 cap.release()
