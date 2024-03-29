@@ -7,14 +7,12 @@ import math
 import tensorflow
 from collections import Counter
 import logging
-import keras
+
 
 offset=15
 imgSize= 300
 cap= cv2.VideoCapture(0)
-counter = 0
 detector = HandDetector(maxHands=1)
-# folder= "ThankYou"
 values= []
 Cfier = Classifier("model/keras_model.h5","model/labels.txt")
 label=["A","B","C"]
@@ -68,9 +66,9 @@ while True:
             imgWhite[:,wGap:wCalc+wGap]= imgResize
         pridictions,index =Cfier.getPrediction(img)
         values.append(label[index])
-        if len(values) == 37:
+        if len(values) == 57:
             result=vote(values)
-            print(f'the most common value is {result}')
+            print(f'the most common value is {result}with a pridiction rate of {pridictions}')
             values.clear()
             # print(f'pridicted letter is {label[index]} which is at {index} with a pridiction rate of {pridictions}')
 
