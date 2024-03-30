@@ -7,6 +7,7 @@ import math
 import tensorflow
 from collections import Counter
 import logging
+import pyttsx3
 
 
 offset=15
@@ -14,15 +15,16 @@ imgSize= 300
 cap= cv2.VideoCapture(0)
 detector = HandDetector(maxHands=1)
 values= []
-Cfier = Classifier("model/keras_model.h5","model/labels.txt")
-label=["A","B","C"]
+Cfier = Classifier("VSCODE\hand_gesture-main\model\keras_model.h5","VSCODE\hand_gesture-main\model\labels.txt")
+label=["Hello","Good Morning","Thank You"]
+enigine=pyttsx3.init()
 
 def vote(values):
     # Count occurrences of each value
     counts = Counter(values)
     
     # Find the most common value
-    most_common_value = counts.most_common(1)[0]
+    most_common_value = counts.most_common(1)[0][0]
     
     return most_common_value
 
@@ -66,10 +68,15 @@ while True:
             imgWhite[:,wGap:wCalc+wGap]= imgResize
         pridictions,index =Cfier.getPrediction(img)
         values.append(label[index])
-        if len(values) == 57:
+        if len(values) == 17:
             result=vote(values)
             print(f'the most common value is {result}with a pridiction rate of {pridictions}')
+            enigine.setProperty('rate',150)
+            enigine.setProperty('volumn',0.9)
+            answer=(f'he said {result}')
+            enigine.say(result)
             values.clear()
+            enigine.runAndWait()
             # print(f'pridicted letter is {label[index]} which is at {index} with a pridiction rate of {pridictions}')
 
 
