@@ -1,12 +1,10 @@
 import cv2
 from cvzone.ClassificationModule import Classifier
 from cvzone.HandTrackingModule import HandDetector
-import mediapipe
 import numpy as np 
 import math
 import tensorflow
 from collections import Counter
-import logging
 import pyttsx3
 
 
@@ -15,15 +13,14 @@ imgSize= 300
 cap= cv2.VideoCapture(0)
 detector = HandDetector(maxHands=1)
 values= []
-Cfier = Classifier("VSCODE\hand_gesture-main\model\keras_model.h5","VSCODE\hand_gesture-main\model\labels.txt")
+Cfier = Classifier("model/keras_model.h5","model/labels.txt")
 label=["Hello","Good Morning","Thank You"]
-enigine=pyttsx3.init()
+engine=pyttsx3.init()
+DEFAULT_GESTURE="None"
+
 
 def vote(values):
-    # Count occurrences of each value
     counts = Counter(values)
-    
-    # Find the most common value
     most_common_value = counts.most_common(1)[0][0]
     
     return most_common_value
@@ -34,7 +31,10 @@ def vote(values):
 while True:
     success, img =cap.read()
     hands,img= detector.findHands(img)
-    if hands:
+    if hands== []:
+            cv2.putText(img,"No gesture detected",(50,50),cv2.FONT_HERSHEY_COMPLEX,1.5,(0,0,255),3)
+
+    elif hands:
         hand = hands[0]
         x,y,w,h=hand['bbox']
         
@@ -48,21 +48,35 @@ while True:
         if asRatio <1:
             k = imgSize / w
             hCal = math.ceil(k * h)
-            imgResize = cv2.resize(imgCrop, (imgSize, hCal))
+            try:
+                imgResize = cv2.resize(imgCrop, (imgSize, hCal))
+            except cv2.error as e:
+                if "!ssize.empty()" in str(e):
+                    print("out of the screen")
+                    engine.say("take hand inside screen")
+                    engine.runAndWait()
+                    continue
+                else:
+        # If it's another kind of cv2.error, you might want to handle it differently
+                    print("An OpenCV error occurred:", e)
+
             imgResizeShape = imgResize.shape
             hGap = math.ceil((imgSize - hCal) / 2)
             imgWhite[hGap:hCal + hGap, :] = imgResize
-            # pridictions,index =Cfier.getPrediction(img)
-            # values.append(label[index])
-            # if len(values) == 37:
-            #     result=vote(values)
-            #     print(f'the most common value is {result}')
-            #     values.clear()
-            # print(f'pridicted letter is {label[index]} with a pridiction rate of {pridictions}')
         else:
             k= imgSize / h
             wCalc= math.ceil(k * w)
-            imgResize= cv2.resize(imgCrop, (wCalc, imgSize))
+            try:
+                imgResize= cv2.resize(imgCrop, (wCalc, imgSize))
+            except cv2.error as e:
+                if "!ssize.empty()" in str(e):
+                    print("out of the screen")
+                    # engine.say("take hand inside screen")
+                    cv2.putText(img,"outside of the screen",(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(255,0,0),4)
+                    continue
+                else:
+                    print("An OpenCV error occurred:", e)
+
             imgResizeShape= imgResize.shape
             wGap= math.ceil((imgSize - wCalc)/2)
             imgWhite[:,wGap:wCalc+wGap]= imgResize
@@ -71,19 +85,17 @@ while True:
         if len(values) == 17:
             result=vote(values)
             print(f'the most common value is {result}with a pridiction rate of {pridictions}')
-            enigine.setProperty('rate',150)
-            enigine.setProperty('volumn',0.9)
+            engine.setProperty('rate',150)
+            engine.setProperty('volumn',1.0)
             answer=(f'he said {result}')
-            enigine.say(result)
+            engine.say(result)
             values.clear()
-            enigine.runAndWait()
-            # print(f'pridicted letter is {label[index]} which is at {index} with a pridiction rate of {pridictions}')
-
-
-
+            engine.runAndWait()
 
         cv2.imshow("imgcrop",imgCrop)
         cv2.imshow("imgwhite",imgWhite)
+
+
     
 
     cv2.imshow("IMAGE",img)
