@@ -16,6 +16,7 @@ values= []
 Cfier = Classifier("model/keras_model.h5","model/labels.txt")
 label=["Hello","Good Morning","Thank You"]
 engine=pyttsx3.init()
+wait_key=40
 DEFAULT_GESTURE="None"
 Screen_hand=False
 engine.setProperty('rate',150)
@@ -123,7 +124,7 @@ while True:
     
 
     cv2.imshow("IMAGE",img)
-    if cv2.waitKey(40) & 0xFF == ord('w'): 
+    if cv2.waitKey(wait_key) & 0xFF == ord('w'): 
         break
 
 cap.release()
