@@ -17,6 +17,9 @@ Cfier = Classifier("model/keras_model.h5","model/labels.txt")
 label=["Hello","Good Morning","Thank You"]
 engine=pyttsx3.init()
 DEFAULT_GESTURE="None"
+Screen_hand=False
+engine.setProperty('rate',150)
+engine.setProperty('volumn',1.0)
 
 
 def vote(values):
@@ -31,6 +34,7 @@ def vote(values):
 while True:
     success, img =cap.read()
     hands,img= detector.findHands(img)
+    temp,img2=cap.read()
     if hands== []:
             cv2.putText(img,"No gesture detected",(50,50),cv2.FONT_HERSHEY_COMPLEX,1.5,(0,0,255),3)
 
@@ -48,48 +52,68 @@ while True:
         if asRatio <1:
             k = imgSize / w
             hCal = math.ceil(k * h)
+
             try:
                 imgResize = cv2.resize(imgCrop, (imgSize, hCal))
             except cv2.error as e:
-                if "!ssize.empty()" in str(e):
-                    print("out of the screen")
-                    engine.say("take hand inside screen")
-                    engine.runAndWait()
-                    continue
-                else:
-        # If it's another kind of cv2.error, you might want to handle it differently
-                    print("An OpenCV error occurred:", e)
+                if not Screen_hand:
+
+                    if "!ssize.empty()" in str(e):
+                        print("out of the screen")
+                        values.clear()
+                        engine.say("take hand inside screen")
+                        engine.runAndWait()
+                        cv2.putText(img2,"outside of the screen",(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(255,0,0),4)
+                    
+                    else:
+                    # If it's another kind of cv2.error, you might want to handle it differently
+                        print("An OpenCV error occurred:", e)
+                Screen_hand=True
+                continue
 
             imgResizeShape = imgResize.shape
             hGap = math.ceil((imgSize - hCal) / 2)
             imgWhite[hGap:hCal + hGap, :] = imgResize
+
+
+
         else:
             k= imgSize / h
             wCalc= math.ceil(k * w)
+
             try:
                 imgResize= cv2.resize(imgCrop, (wCalc, imgSize))
             except cv2.error as e:
-                if "!ssize.empty()" in str(e):
-                    print("out of the screen")
-                    # engine.say("take hand inside screen")
-                    cv2.putText(img,"outside of the screen",(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(255,0,0),4)
-                    continue
-                else:
-                    print("An OpenCV error occurred:", e)
+
+
+                if not Screen_hand:
+
+                    if "!ssize.empty()" in str(e):
+                        print("out of the screen")
+                        values.clear()
+                        engine.say("take hand inside screen")
+                        engine.runAndWait()
+                        cv2.putText(img2,"outside of the screen",(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(255,0,0),4)
+                    
+                    else:
+                    # If it's another kind of cv2.error, you might want to handle it differently
+                        print("An OpenCV error occurred:", e)
+                Screen_hand=True
+                continue
 
             imgResizeShape= imgResize.shape
             wGap= math.ceil((imgSize - wCalc)/2)
             imgWhite[:,wGap:wCalc+wGap]= imgResize
         pridictions,index =Cfier.getPrediction(img)
         values.append(label[index])
+
         if len(values) == 17:
             result=vote(values)
-            print(f'the most common value is {result}with a pridiction rate of {pridictions}')
-            engine.setProperty('rate',150)
-            engine.setProperty('volumn',1.0)
+            print(f'the most common value is {result} with a pridiction rate of {pridictions}')
             answer=(f'he said {result}')
             engine.say(result)
             values.clear()
+            Screen_hand=False
             engine.runAndWait()
 
         cv2.imshow("imgcrop",imgCrop)
